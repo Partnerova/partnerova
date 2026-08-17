@@ -33,7 +33,10 @@ export default function Connexion() {
 
   return (
     <div className="container">
-      <div className="form-card">
+      <div style={{ textAlign: 'center', paddingTop: 40 }}>
+        <img src="/logo.png" alt="Partnerova" className="logo-img" style={{ margin: '0 auto' }} />
+      </div>
+      <div className="form-card" style={{ marginTop: 20 }}>
         <h1>Connexion</h1>
         <p className="subtitle">Accède à ton espace marque ou influenceur.</p>
         <form onSubmit={submit}>

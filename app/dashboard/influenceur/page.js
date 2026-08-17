@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '../../../lib/supabase-browser';
 
+const LABEL_CAND = { en_attente: 'Candidature envoyée', selectionne: 'Transmis à la marque', acceptee: 'Accepté par la marque', refuse: 'Non retenu' };
+
 export default function DashboardInfluenceur() {
   const supabase = createClient();
   const router = useRouter();
@@ -60,7 +62,7 @@ export default function DashboardInfluenceur() {
   return (
     <div className="container">
       <div className="dash-header">
-        <div className="logo">agence<span>.</span></div>
+        <img src="/logo.png" alt="Partnerova" className="logo-img" />
         <div className="nav-links">
           <span style={{ color: 'var(--gray)' }}>{profil.nom}</span>
           <button className="btn btn-outline" onClick={logout}>Déconnexion</button>
@@ -81,9 +83,7 @@ export default function DashboardInfluenceur() {
                 <p className="meta">{c.budget} {c.criteres && `· ${c.criteres}`}</p>
               </div>
               {statut ? (
-                <span className={`badge badge-${statut === 'en_attente' ? 'attente' : statut}`}>
-                  {statut === 'en_attente' ? 'Candidature envoyée' : statut === 'selectionne' ? 'Sélectionné' : 'Non retenu'}
-                </span>
+                <span className={`badge badge-${statut}`}>{LABEL_CAND[statut]}</span>
               ) : (
                 <button className="btn btn-primary" onClick={() => candidater(c.id)}>Candidater</button>
               )}

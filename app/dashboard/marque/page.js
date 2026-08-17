@@ -2,6 +2,10 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '../../../lib/supabase-browser';
+import { ADMIN_EMAIL } from '../../../lib/config';
+
+const LABEL_CAMPAGNE = { en_attente: 'En attente de validation', ouverte: 'Ouverte', refusee: 'Refusée', fermee: 'Fermée' };
+const LABEL_CAND = { en_attente: 'En cours d\u2019examen', selectionne: 'Transmis par l\u2019agence', acceptee: 'Accepté', refuse: 'Refusé' };
 
 export default function DashboardMarque() {
   const supabase = createClient();
@@ -32,7 +36,7 @@ export default function DashboardMarque() {
           .from('candidatures')
           .select('*, influenceurs(nom, plateforme_principale, lien_profil, nb_abonnes, niche)')
           .eq('campagne_id', c.id)
-          .eq('statut', 'selectionne');
+          .in('statut', ['selectionne', 'acceptee']);
         results[c.id] = cands || [];
       }
       setCandidaturesParCampagne(results);
@@ -46,6 +50,16 @@ export default function DashboardMarque() {
     await supabase.from('campagnes').insert({ ...form, marque_id: user.id });
     setForm({ titre: '', brief: '', budget: '', criteres: '' });
     setShowForm(false);
+    load();
+  };
+
+  const decider = async (id, statut) => {
+    await supabase.from('candidatures').update({ statut }).eq('id', id);
+    load();
+  };
+
+  const fermerCampagne = async (id) => {
+    await supabase.from('campagnes').update({ statut: 'fermee' }).eq('id', id);
     load();
   };
 
@@ -71,7 +85,7 @@ export default function DashboardMarque() {
   return (
     <div className="container">
       <div className="dash-header">
-        <div className="logo">agence<span>.</span></div>
+        <img src="/logo.png" alt="Partnerova" className="logo-img" />
         <div className="nav-links">
           <span style={{ color: 'var(--gray)' }}>{marque.nom_entreprise}</span>
           <button className="btn btn-outline" onClick={logout}>Déconnexion</button>
@@ -103,6 +117,9 @@ export default function DashboardMarque() {
             <label>Critères recherchés</label>
             <input value={form.criteres} onChange={(e) => setForm({ ...form, criteres: e.target.value })} placeholder="ex: +10k abonnés, niche mode" />
           </div>
+          <p style={{ fontSize: 13, color: 'var(--gray)', marginTop: -6, marginBottom: 18 }}>
+            Ta campagne sera examinée par notre équipe avant d'être publiée aux influenceurs.
+          </p>
           <button className="btn btn-primary">Publier la campagne</button>
         </form>
       )}
@@ -118,26 +135,51 @@ export default function DashboardMarque() {
               <h3>{c.titre}</h3>
               <p className="meta">{c.budget} {c.criteres && `· ${c.criteres}`}</p>
             </div>
-            <span className={`badge badge-${c.statut}`}>{c.statut === 'ouverte' ? 'Ouverte' : 'Fermée'}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span className={`badge badge-${c.statut}`}>{LABEL_CAMPAGNE[c.statut] || c.statut}</span>
+              {c.statut === 'ouverte' && (
+                <button className="btn btn-outline btn-sm" onClick={() => fermerCampagne(c.id)}>Clôturer</button>
+              )}
+            </div>
           </div>
           <p style={{ fontSize: 14, color: 'var(--gray)' }}>{c.brief}</p>
+          {c.statut === 'en_attente' && (
+            <p style={{ fontSize: 13, color: 'var(--blue)' }}>Cette campagne est en attente de validation par l'agence.</p>
+          )}
+          {c.statut === 'refusee' && (
+            <p style={{ fontSize: 13, color: 'var(--danger)' }}>Cette campagne n'a pas été validée par l'agence.</p>
+          )}
 
           <div className="section-title">Profils proposés ({(candidaturesParCampagne[c.id] || []).length})</div>
           {(candidaturesParCampagne[c.id] || []).length === 0 ? (
             <p style={{ fontSize: 13, color: 'var(--gray)' }}>
-              Aucun profil sélectionné pour l'instant — notre équipe examine les candidatures.
+              Aucun profil transmis pour l'instant — notre équipe examine les candidatures.
             </p>
           ) : (
             candidaturesParCampagne[c.id].map((cand) => (
-              <div key={cand.id} className="card" style={{ background: 'var(--navy)' }}>
-                <strong>{cand.influenceurs.nom}</strong>
-                <p className="meta">
-                  {cand.influenceurs.plateforme_principale} · {cand.influenceurs.nb_abonnes?.toLocaleString('fr-FR')} abonnés · {cand.influenceurs.niche}
-                </p>
+              <div key={cand.id} className="card" style={{ background: '#fff' }}>
+                <div className="card-row">
+                  <div>
+                    <strong>{cand.influenceurs.nom}</strong>
+                    <p className="meta">
+                      {cand.influenceurs.plateforme_principale} · {cand.influenceurs.nb_abonnes?.toLocaleString('fr-FR')} abonnés · {cand.influenceurs.niche}
+                    </p>
+                  </div>
+                  <span className={`badge badge-${cand.statut}`}>{LABEL_CAND[cand.statut]}</span>
+                </div>
                 {cand.influenceurs.lien_profil && (
-                  <a href={cand.influenceurs.lien_profil} target="_blank" rel="noreferrer" style={{ fontSize: 13, color: 'var(--gold)' }}>
-                    Voir le profil →
+                  <a href={cand.influenceurs.lien_profil} target="_blank" rel="noreferrer" style={{ fontSize: 13, color: 'var(--blue)' }}>
+                    Voir le profil TikTok →
                   </a>
+                )}
+                <p style={{ fontSize: 12.5, color: 'var(--gray)', marginTop: 10 }}>
+                  Ce profil t'intéresse ? Contacte l'agence à <a href={`mailto:${ADMIN_EMAIL}`} style={{ color: 'var(--blue)' }}>{ADMIN_EMAIL}</a> pour être mis en relation.
+                </p>
+                {cand.statut === 'selectionne' && (
+                  <div style={{ marginTop: 12, display: 'flex', gap: 10 }}>
+                    <button className="btn btn-primary btn-sm" onClick={() => decider(cand.id, 'acceptee')}>Accepter</button>
+                    <button className="btn btn-outline btn-sm" onClick={() => decider(cand.id, 'refuse')}>Refuser</button>
+                  </div>
                 )}
               </div>
             ))

@@ -6,17 +6,20 @@ import Link from 'next/link';
 export default function InscriptionInfluenceur() {
   const supabase = createClient();
   const [form, setForm] = useState({
-    email: '', password: '', nom: '', plateforme_principale: '', lien_profil: '', nb_abonnes: '', niche: '', telephone: ''
+    email: '', password: '', nom: '', plateforme_principale: '', lien_profil: '',
+    nb_abonnes: '', niche: '', telephone: '', raison_sociale: '', siret: '', email_contact: '', cgu: false
   });
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const update = (k) => (e) => setForm({ ...form, [k]: e.target.value });
+  const update = (k) => (e) => setForm({ ...form, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value });
 
   const submit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (!form.cgu) { setError("Tu dois accepter les conditions d'utilisation pour continuer."); return; }
     setLoading(true);
 
     const { data, error: signUpError } = await supabase.auth.signUp({
@@ -37,6 +40,9 @@ export default function InscriptionInfluenceur() {
       nb_abonnes: form.nb_abonnes ? parseInt(form.nb_abonnes, 10) : null,
       niche: form.niche,
       telephone: form.telephone,
+      raison_sociale: form.raison_sociale,
+      siret: form.siret,
+      email_contact: form.email_contact,
     });
 
     setLoading(false);
@@ -75,7 +81,7 @@ export default function InscriptionInfluenceur() {
           </div>
           <div className="field">
             <label>Lien du profil</label>
-            <input value={form.lien_profil} onChange={update('lien_profil')} placeholder="https://" />
+            <input required value={form.lien_profil} onChange={update('lien_profil')} placeholder="https://tiktok.com/@..." />
           </div>
           <div className="field">
             <label>Nombre d'abonnés</label>
@@ -86,17 +92,33 @@ export default function InscriptionInfluenceur() {
             <input value={form.niche} onChange={update('niche')} placeholder="Mode, fitness, lifestyle..." />
           </div>
           <div className="field">
+            <label>Statut / nom d'entreprise (auto-entrepreneur, société...)</label>
+            <input required value={form.raison_sociale} onChange={update('raison_sociale')} placeholder="ex: Auto-entrepreneur — Jean Dupont" />
+          </div>
+          <div className="field">
+            <label>SIRET (ou numéro d'immatriculation)</label>
+            <input required value={form.siret} onChange={update('siret')} placeholder="14 chiffres" />
+          </div>
+          <div className="field">
             <label>Téléphone</label>
             <input value={form.telephone} onChange={update('telephone')} />
           </div>
           <div className="field">
-            <label>Email</label>
+            <label>Email de connexion</label>
             <input required type="email" value={form.email} onChange={update('email')} />
+          </div>
+          <div className="field">
+            <label>Email de contact (pour être recontacté par l'agence)</label>
+            <input required type="email" value={form.email_contact} onChange={update('email_contact')} placeholder="peut être différent de l'email de connexion" />
           </div>
           <div className="field">
             <label>Mot de passe</label>
             <input required type="password" minLength={6} value={form.password} onChange={update('password')} />
           </div>
+          <label className="field-check">
+            <input type="checkbox" checked={form.cgu} onChange={update('cgu')} />
+            <span>J'accepte les <Link href="/cgu" target="_blank" style={{ color: 'var(--blue)' }}>conditions d'utilisation</Link> de Partnerova.</span>
+          </label>
           {error && <p className="error-msg">{error}</p>}
           <button className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
             {loading ? 'Création...' : 'Créer mon compte'}

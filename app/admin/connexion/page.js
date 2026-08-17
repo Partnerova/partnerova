@@ -32,7 +32,10 @@ export default function AdminConnexion() {
 
   return (
     <div className="container">
-      <div className="form-card">
+      <div style={{ textAlign: 'center', paddingTop: 40 }}>
+        <img src="/logo.png" alt="Partnerova" className="logo-img" style={{ margin: '0 auto' }} />
+      </div>
+      <div className="form-card" style={{ marginTop: 20 }}>
         <h1>Espace admin</h1>
         <p className="subtitle">Réservé à l'équipe de l'agence.</p>
         <form onSubmit={submit}>

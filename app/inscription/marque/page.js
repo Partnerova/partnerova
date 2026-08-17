@@ -6,17 +6,20 @@ import Link from 'next/link';
 export default function InscriptionMarque() {
   const supabase = createClient();
   const [form, setForm] = useState({
-    email: '', password: '', nom_entreprise: '', secteur: '', contact_nom: '', telephone: '', site_web: ''
+    email: '', password: '', nom_entreprise: '', siret: '', secteur: '',
+    contact_nom: '', telephone: '', site_web: '', email_contact: '', cgu: false
   });
   const [error, setError] = useState('');
   const [done, setDone] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const update = (k) => (e) => setForm({ ...form, [k]: e.target.value });
+  const update = (k) => (e) => setForm({ ...form, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value });
 
   const submit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (!form.cgu) { setError("Tu dois accepter les conditions d'utilisation pour continuer."); return; }
     setLoading(true);
 
     const { data, error: signUpError } = await supabase.auth.signUp({
@@ -32,10 +35,12 @@ export default function InscriptionMarque() {
     const { error: insertError } = await supabase.from('marques').insert({
       id: userId,
       nom_entreprise: form.nom_entreprise,
+      siret: form.siret,
       secteur: form.secteur,
       contact_nom: form.contact_nom,
       telephone: form.telephone,
       site_web: form.site_web,
+      email_contact: form.email_contact,
     });
 
     setLoading(false);
@@ -69,6 +74,10 @@ export default function InscriptionMarque() {
             <input required value={form.nom_entreprise} onChange={update('nom_entreprise')} />
           </div>
           <div className="field">
+            <label>SIRET (ou numéro d'immatriculation)</label>
+            <input required value={form.siret} onChange={update('siret')} placeholder="14 chiffres" />
+          </div>
+          <div className="field">
             <label>Secteur d'activité</label>
             <input value={form.secteur} onChange={update('secteur')} placeholder="Mode, beauté, food..." />
           </div>
@@ -85,13 +94,21 @@ export default function InscriptionMarque() {
             <input value={form.site_web} onChange={update('site_web')} placeholder="https://" />
           </div>
           <div className="field">
-            <label>Email</label>
+            <label>Email de connexion</label>
             <input required type="email" value={form.email} onChange={update('email')} />
+          </div>
+          <div className="field">
+            <label>Email de contact (pour être recontacté par l'agence)</label>
+            <input required type="email" value={form.email_contact} onChange={update('email_contact')} placeholder="peut être différent de l'email de connexion" />
           </div>
           <div className="field">
             <label>Mot de passe</label>
             <input required type="password" minLength={6} value={form.password} onChange={update('password')} />
           </div>
+          <label className="field-check">
+            <input type="checkbox" checked={form.cgu} onChange={update('cgu')} />
+            <span>J'accepte les <Link href="/cgu" target="_blank" style={{ color: 'var(--blue)' }}>conditions d'utilisation</Link> de Partnerova.</span>
+          </label>
           {error && <p className="error-msg">{error}</p>}
           <button className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
             {loading ? 'Création...' : 'Créer mon compte'}
