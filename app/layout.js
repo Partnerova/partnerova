@@ -6,7 +6,7 @@ export const metadata = {
   metadataBase: new URL(SITE_URL),
   title: 'Sponsova — Agence de collaborations TikTok',
   description: "Plateforme de mise en relation entre marques et influenceurs",
-  icons: { icon: '/logo.png' },
+  icons: { icon: '/favicon.png' },
   openGraph: {
     title: 'Sponsova — Agence de collaborations TikTok',
     description: "Des collaborations choisies avec soin, pas au hasard.",

@@ -6,7 +6,9 @@ export default function Footer() {
     <footer className="site-footer">
       <div className="container footer-grid">
         <div className="footer-col footer-brand">
-          <img src="/logo.png" alt="Sponsova" className="logo-img" style={{ height: 32, marginBottom: 14 }} />
+          <div className="footer-logo-badge">
+            <img src="/logo.png" alt="Sponsova" className="logo-img" style={{ height: 32 }} />
+          </div>
           <p>Des collaborations choisies avec soin, pas au hasard.</p>
         </div>
 
