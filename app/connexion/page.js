@@ -34,7 +34,7 @@ export default function Connexion() {
   return (
     <div className="container">
       <div style={{ textAlign: 'center', paddingTop: 40 }}>
-        <img src="/logo.png" alt="Partnerova" className="logo-img" style={{ margin: '0 auto' }} />
+        <img src="/logo.png" alt="Sponsova" className="logo-img" style={{ margin: '0 auto' }} />
       </div>
       <div className="form-card" style={{ marginTop: 20 }}>
         <h1>Connexion</h1>

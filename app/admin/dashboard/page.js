@@ -94,7 +94,7 @@ export default function AdminDashboard() {
     <div className="container">
       <div className="dash-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <img src="/logo.png" alt="Partnerova" className="logo-img" />
+          <img src="/logo.png" alt="Sponsova" className="logo-img" />
           <span style={{ fontSize: 13, color: 'var(--gray)' }}>admin</span>
         </div>
         <button className="btn btn-outline" onClick={logout}>Déconnexion</button>

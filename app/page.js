@@ -6,7 +6,7 @@ export default function Home() {
     <>
       <div className="container">
         <nav className="nav">
-          <Link href="/"><img src="/logo.png" alt="Partnerova" className="logo-img" /></Link>
+          <Link href="/"><img src="/logo.png" alt="Sponsova" className="logo-img" /></Link>
           <div className="nav-links">
             <Link href="/connexion">Connexion</Link>
             <Link href="/inscription/influenceur" className="btn btn-outline">Je suis influenceur</Link>

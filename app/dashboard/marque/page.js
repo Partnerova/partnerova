@@ -96,7 +96,7 @@ export default function DashboardMarque() {
   return (
     <div className="container">
       <div className="dash-header">
-        <img src="/logo.png" alt="Partnerova" className="logo-img" />
+        <img src="/logo.png" alt="Sponsova" className="logo-img" />
         <div className="nav-links">
           <span style={{ color: 'var(--gray)' }}>{marque.nom_entreprise}</span>
           <button className="btn btn-outline" onClick={logout}>Déconnexion</button>

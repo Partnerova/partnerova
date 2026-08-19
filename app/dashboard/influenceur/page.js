@@ -71,7 +71,7 @@ export default function DashboardInfluenceur() {
   return (
     <div className="container">
       <div className="dash-header">
-        <img src="/logo.png" alt="Partnerova" className="logo-img" />
+        <img src="/logo.png" alt="Sponsova" className="logo-img" />
         <div className="nav-links">
           <span style={{ color: 'var(--gray)' }}>{profil.nom}</span>
           <button className="btn btn-outline" onClick={logout}>Déconnexion</button>

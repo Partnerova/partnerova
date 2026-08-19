@@ -11,7 +11,7 @@ export default function CGU() {
 
       <h2>1. Objet</h2>
       <p>
-        Partnerova ("l'Agence") est une plateforme de mise en relation entre des marques et des
+        Sponsova ("l'Agence") est une plateforme de mise en relation entre des marques et des
         influenceurs en vue de collaborations commerciales (partenariats, contenus sponsorisés, etc.).
         L'Agence agit en tant qu'intermédiaire : elle sélectionne, vérifie et transmet des profils,
         mais n'est pas partie aux contrats de collaboration conclus entre marques et influenceurs.

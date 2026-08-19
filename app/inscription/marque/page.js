@@ -107,7 +107,7 @@ export default function InscriptionMarque() {
           </div>
           <label className="field-check">
             <input type="checkbox" checked={form.cgu} onChange={update('cgu')} />
-            <span>J'accepte les <Link href="/cgu" target="_blank" style={{ color: 'var(--blue)' }}>conditions d'utilisation</Link> de Partnerova.</span>
+            <span>J'accepte les <Link href="/cgu" target="_blank" style={{ color: 'var(--blue)' }}>conditions d'utilisation</Link> de Sponsova.</span>
           </label>
           {error && <p className="error-msg">{error}</p>}
           <button className="btn btn-primary" style={{ width: '100%' }} disabled={loading}>
