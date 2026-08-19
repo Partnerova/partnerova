@@ -8,7 +8,7 @@ const LABEL_CAMPAGNE = { en_attente: 'En attente de validation', ouverte: 'Ouver
 const LABEL_CAND = { en_attente: 'En cours d\u2019examen', selectionne: 'Transmis par l\u2019agence', acceptee: 'Accepté', refuse: 'Refusé' };
 
 export default function DashboardMarque() {
-  const supabase = createClient();
+  const [supabase] = useState(() => createClient());
   const router = useRouter();
   const [marque, setMarque] = useState(null);
   const [campagnes, setCampagnes] = useState([]);
@@ -17,17 +17,25 @@ export default function DashboardMarque() {
   const [form, setForm] = useState({ titre: '', brief: '', budget: '', criteres: '' });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    let active = true;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!active) return;
+      if (!session?.user) { router.push('/connexion'); return; }
+      load(session.user.id);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') router.push('/connexion');
+    });
+    return () => { active = false; subscription.unsubscribe(); };
+  }, []);
 
-  const load = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { router.push('/connexion'); return; }
-
-    const { data: m } = await supabase.from('marques').select('*').eq('id', user.id).single();
+  const load = async (userId) => {
+    const { data: m } = await supabase.from('marques').select('*').eq('id', userId).single();
     setMarque(m);
 
     if (m) {
-      const { data: camps } = await supabase.from('campagnes').select('*').eq('marque_id', user.id).order('created_at', { ascending: false });
+      const { data: camps } = await supabase.from('campagnes').select('*').eq('marque_id', userId).order('created_at', { ascending: false });
       setCampagnes(camps || []);
 
       const results = {};
@@ -46,21 +54,24 @@ export default function DashboardMarque() {
 
   const creerCampagne = async (e) => {
     e.preventDefault();
-    const { data: { user } } = await supabase.auth.getUser();
-    await supabase.from('campagnes').insert({ ...form, marque_id: user.id });
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return;
+    await supabase.from('campagnes').insert({ ...form, marque_id: session.user.id });
     setForm({ titre: '', brief: '', budget: '', criteres: '' });
     setShowForm(false);
-    load();
+    load(session.user.id);
   };
 
   const decider = async (id, statut) => {
     await supabase.from('candidatures').update({ statut }).eq('id', id);
-    load();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) load(session.user.id);
   };
 
   const fermerCampagne = async (id) => {
     await supabase.from('campagnes').update({ statut: 'fermee' }).eq('id', id);
-    load();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) load(session.user.id);
   };
 
   const logout = async () => { await supabase.auth.signOut(); router.push('/'); };

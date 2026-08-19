@@ -7,7 +7,7 @@ const LABEL_CAMPAGNE = { en_attente: 'En attente', ouverte: 'Ouverte', refusee: 
 const LABEL_CAND = { en_attente: 'En attente', selectionne: 'Transmis à la marque', acceptee: 'Accepté par la marque', refuse: 'Refusé' };
 
 export default function AdminDashboard() {
-  const supabase = createClient();
+  const [supabase] = useState(() => createClient());
   const router = useRouter();
   const [tab, setTab] = useState('influenceurs');
   const [isAdmin, setIsAdmin] = useState(null);
@@ -16,12 +16,21 @@ export default function AdminDashboard() {
   const [campagnes, setCampagnes] = useState([]);
   const [candidatures, setCandidatures] = useState({});
 
-  useEffect(() => { checkAdmin(); }, []);
+  useEffect(() => {
+    let active = true;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!active) return;
+      checkAdmin(session);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') router.push('/admin/connexion');
+    });
+    return () => { active = false; subscription.unsubscribe(); };
+  }, []);
 
-  const checkAdmin = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { router.push('/admin/connexion'); return; }
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+  const checkAdmin = async (session) => {
+    if (!session?.user) { router.push('/admin/connexion'); return; }
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', session.user.id).single();
     if (profile?.role !== 'admin') { router.push('/admin/connexion'); return; }
     setIsAdmin(true);
     loadAll();

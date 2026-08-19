@@ -6,36 +6,45 @@ import { createClient } from '../../../lib/supabase-browser';
 const LABEL_CAND = { en_attente: 'Candidature envoyée', selectionne: 'Transmis à la marque', acceptee: 'Accepté par la marque', refuse: 'Non retenu' };
 
 export default function DashboardInfluenceur() {
-  const supabase = createClient();
+  const [supabase] = useState(() => createClient());
   const router = useRouter();
   const [profil, setProfil] = useState(null);
   const [campagnes, setCampagnes] = useState([]);
   const [mesCandidatures, setMesCandidatures] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    let active = true;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!active) return;
+      if (!session?.user) { router.push('/connexion'); return; }
+      load(session.user.id);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT') router.push('/connexion');
+    });
+    return () => { active = false; subscription.unsubscribe(); };
+  }, []);
 
-  const load = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { router.push('/connexion'); return; }
-
-    const { data: inf } = await supabase.from('influenceurs').select('*').eq('id', user.id).single();
+  const load = async (userId) => {
+    const { data: inf } = await supabase.from('influenceurs').select('*').eq('id', userId).single();
     setProfil(inf);
 
     if (inf?.statut === 'verifie') {
       const { data: camps } = await supabase.from('campagnes').select('*').eq('statut', 'ouverte').order('created_at', { ascending: false });
       setCampagnes(camps || []);
 
-      const { data: cands } = await supabase.from('candidatures').select('campagne_id, statut').eq('influenceur_id', user.id);
+      const { data: cands } = await supabase.from('candidatures').select('campagne_id, statut').eq('influenceur_id', userId);
       setMesCandidatures(cands || []);
     }
     setLoading(false);
   };
 
   const candidater = async (campagneId) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    await supabase.from('candidatures').insert({ campagne_id: campagneId, influenceur_id: user.id });
-    load();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) return;
+    await supabase.from('candidatures').insert({ campagne_id: campagneId, influenceur_id: session.user.id });
+    load(session.user.id);
   };
 
   const logout = async () => { await supabase.auth.signOut(); router.push('/'); };
