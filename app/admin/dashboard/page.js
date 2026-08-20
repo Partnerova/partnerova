@@ -76,8 +76,13 @@ export default function AdminDashboard() {
 
   const supprimerCompte = async (id, nom) => {
     if (!confirm(`Supprimer définitivement le compte "${nom}" ? Cette action est irréversible.`)) return;
-    const { error } = await supabase.from('profiles').delete().eq('id', id);
-    if (error) alert("Erreur lors de la suppression : " + error.message);
+    const res = await fetch('/api/admin/delete-user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    });
+    const result = await res.json();
+    if (!res.ok) { alert("Erreur lors de la suppression : " + result.error); return; }
     loadAll();
   };
 
