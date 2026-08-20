@@ -15,6 +15,8 @@ export default function AdminDashboard() {
   const [marques, setMarques] = useState([]);
   const [campagnes, setCampagnes] = useState([]);
   const [candidatures, setCandidatures] = useState({});
+  const [editingId, setEditingId] = useState(null);
+  const [editForm, setEditForm] = useState({});
 
   useEffect(() => {
     let active = true;
@@ -86,6 +88,24 @@ export default function AdminDashboard() {
     loadAll();
   };
 
+  const ouvrirEdition = (item) => {
+    setEditingId(item.id);
+    setEditForm({ ...item });
+  };
+  const annulerEdition = () => { setEditingId(null); setEditForm({}); };
+
+  const enregistrerEdition = async (table) => {
+    const { id, created_at, ...champs } = editForm;
+    if (table === 'influenceurs' && champs.nb_abonnes !== undefined && champs.nb_abonnes !== null) {
+      champs.nb_abonnes = champs.nb_abonnes === '' ? null : parseInt(champs.nb_abonnes, 10);
+    }
+    const { error } = await supabase.from(table).update(champs).eq('id', id);
+    if (error) { alert("Erreur lors de l'enregistrement : " + error.message); return; }
+    setEditingId(null);
+    setEditForm({});
+    loadAll();
+  };
+
   const logout = async () => { await supabase.auth.signOut(); router.push('/'); };
 
   if (!isAdmin) return <div className="container"><p style={{ paddingTop: 60 }}>Vérification...</p></div>;
@@ -114,6 +134,24 @@ export default function AdminDashboard() {
 
       {tab === 'influenceurs' && influenceurs.map((i) => (
         <div key={i.id} className="card">
+          {editingId === i.id ? (
+            <div>
+              <div className="field"><label>Nom / pseudo</label><input value={editForm.nom || ''} onChange={(e) => setEditForm({ ...editForm, nom: e.target.value })} /></div>
+              <div className="field"><label>Plateforme</label><input value={editForm.plateforme_principale || ''} onChange={(e) => setEditForm({ ...editForm, plateforme_principale: e.target.value })} /></div>
+              <div className="field"><label>Lien du profil</label><input value={editForm.lien_profil || ''} onChange={(e) => setEditForm({ ...editForm, lien_profil: e.target.value })} /></div>
+              <div className="field"><label>Nombre d'abonnés</label><input type="number" value={editForm.nb_abonnes ?? ''} onChange={(e) => setEditForm({ ...editForm, nb_abonnes: e.target.value })} /></div>
+              <div className="field"><label>Niche</label><input value={editForm.niche || ''} onChange={(e) => setEditForm({ ...editForm, niche: e.target.value })} /></div>
+              <div className="field"><label>Téléphone</label><input value={editForm.telephone || ''} onChange={(e) => setEditForm({ ...editForm, telephone: e.target.value })} /></div>
+              <div className="field"><label>Entreprise / statut</label><input value={editForm.raison_sociale || ''} onChange={(e) => setEditForm({ ...editForm, raison_sociale: e.target.value })} /></div>
+              <div className="field"><label>SIRET</label><input value={editForm.siret || ''} onChange={(e) => setEditForm({ ...editForm, siret: e.target.value })} /></div>
+              <div className="field"><label>Email de contact</label><input value={editForm.email_contact || ''} onChange={(e) => setEditForm({ ...editForm, email_contact: e.target.value })} /></div>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button className="btn btn-primary btn-sm" onClick={() => enregistrerEdition('influenceurs')}>Enregistrer</button>
+                <button className="btn btn-outline btn-sm" onClick={annulerEdition}>Annuler</button>
+              </div>
+            </div>
+          ) : (
+          <>
           <div className="card-row">
             <div>
               <h3>{i.nom}</h3>
@@ -135,13 +173,32 @@ export default function AdminDashboard() {
                 <button className="btn btn-outline btn-sm" onClick={() => majStatutInfluenceur(i.id, 'refuse')}>Refuser</button>
               </>
             )}
+            <button className="btn btn-outline btn-sm" onClick={() => ouvrirEdition(i)}>Modifier les infos</button>
             <button className="btn btn-danger btn-sm" onClick={() => supprimerCompte(i.id, i.nom)}>Supprimer le compte</button>
           </div>
+          </>
+          )}
         </div>
       ))}
 
       {tab === 'marques' && marques.map((m) => (
         <div key={m.id} className="card">
+          {editingId === m.id ? (
+            <div>
+              <div className="field"><label>Nom de l'entreprise</label><input value={editForm.nom_entreprise || ''} onChange={(e) => setEditForm({ ...editForm, nom_entreprise: e.target.value })} /></div>
+              <div className="field"><label>Secteur</label><input value={editForm.secteur || ''} onChange={(e) => setEditForm({ ...editForm, secteur: e.target.value })} /></div>
+              <div className="field"><label>Nom du contact</label><input value={editForm.contact_nom || ''} onChange={(e) => setEditForm({ ...editForm, contact_nom: e.target.value })} /></div>
+              <div className="field"><label>Téléphone</label><input value={editForm.telephone || ''} onChange={(e) => setEditForm({ ...editForm, telephone: e.target.value })} /></div>
+              <div className="field"><label>Site web</label><input value={editForm.site_web || ''} onChange={(e) => setEditForm({ ...editForm, site_web: e.target.value })} /></div>
+              <div className="field"><label>SIRET</label><input value={editForm.siret || ''} onChange={(e) => setEditForm({ ...editForm, siret: e.target.value })} /></div>
+              <div className="field"><label>Email de contact</label><input value={editForm.email_contact || ''} onChange={(e) => setEditForm({ ...editForm, email_contact: e.target.value })} /></div>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button className="btn btn-primary btn-sm" onClick={() => enregistrerEdition('marques')}>Enregistrer</button>
+                <button className="btn btn-outline btn-sm" onClick={annulerEdition}>Annuler</button>
+              </div>
+            </div>
+          ) : (
+          <>
           <div className="card-row">
             <div>
               <h3>{m.nom_entreprise}</h3>
@@ -161,8 +218,11 @@ export default function AdminDashboard() {
                 <button className="btn btn-outline btn-sm" onClick={() => majStatutMarque(m.id, 'refuse')}>Refuser</button>
               </>
             )}
+            <button className="btn btn-outline btn-sm" onClick={() => ouvrirEdition(m)}>Modifier les infos</button>
             <button className="btn btn-danger btn-sm" onClick={() => supprimerCompte(m.id, m.nom_entreprise)}>Supprimer le compte</button>
           </div>
+          </>
+          )}
         </div>
       ))}
 
